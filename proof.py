@@ -1,37 +1,45 @@
 import hashlib
-from random import choice
+from random import choice, randint
 from string import ascii_letters
 
 def mint(challenge, work_factor):
 
+    nonce = 0
+
     while True:
-        # generate random token - create full test string
-        token = generate_random_string()
-        input_string = str(challenge) + "||" + token
 
-        # run through hash function
-        h = hashlib.sha256()
-        h.update(input_string.encode('utf-8'))
-        hash_output = h.hexdigest()
+        # convert nonce to string to append to header
+        token = str(nonce)
 
-        print("Token: %s" % token)
-        print("Hash Output: %s" % hash_output)
-
-        # check if output matches desired work_factor
-        if verify_hash(hash_output, work_factor):
+        # check if our guess produces the desired hash
+        if verify(challenge, work_factor, token):
             print("FOUND THE MAGIC TOKEN")
-            return hash_output
+            print("On attempt number %s" % nonce)
+            return token
+
+        nonce += 1
 
 
-def verify_hash(hash_string, work_factor):
+def verify(challenge, work_factor, token):
+
+    # create properly-formatted header
+    full_header = str(challenge) + "||" + token
+
+    # get SHA256 hash of header
+    h = hashlib.sha256()
+    h.update(full_header.encode('utf-8'))
+    hash_output = h.hexdigest()
+
+    # check if hash starts with sufficient 0's
     for i in range(0, work_factor):
-        if not hash_string[i] == str(0):
+        if not hash_output[i] == str(0):
             return False
     return True
 
 
-def generate_random_string(length=10):
-    return (''.join(choice(ascii_letters) for i in range(length)))
 
+if __name__ == '__main__':
 
-mint(431, 3)
+    challenge = randint(0, 1000000000)
+    work_factor = 4
+    mint(challenge, work_factor)
