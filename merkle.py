@@ -11,23 +11,24 @@ hash_concat_format = "%s||%s"
 # * Custom Node Class *
 
 class MerkleNode(object):
-    def __init__(self, left_hash="", right_hash="", node_hash=""):
-        self.left_hash = left_hash
-        self.right_hash = right_hash
+    def __init__(self, left=None, right=None, node_hash=""):
+        self.left = left
+        self.right = right
         self.hash = node_hash
         if not self.hash:
-            self.hash = self.create_hash(left_hash, right_hash)
+            self.hash = self.create_hash(left, right)
 
-    def create_hash(self, left_hash, right_hash):
-        header = hash_concat_format % (left_hash, right_hash)
+    def create_hash(self, left_node, right_node):
+        header = hash_concat_format % (left_node.hash, right_node.hash)
         h = hashlib.sha256()
         h.update(header.encode('utf-8'))
         return h.hexdigest()
 
     def print_node(self):
         print("NODE")
-        print("self.left_hash: %s" % self.left_hash)
-        print("self.right_hash: %s" % self.right_hash)
+        if self.left and self.right:
+            print("self.left.hash: %s" % self.left.hash)
+            print("self.right.hash: %s" % self.right.hash)
         print("self.hash: %s" % self.hash)
         print("______________________________")
 
@@ -41,8 +42,8 @@ def create_merkle_tree(data):
     current_level = []
     merkle_tree = []
 
-    left_block_hash = ""
-    right_block_hash = ""
+    left_child = ""
+    right_child = ""
 
     # first, convert raw data to nodes
     for item in data:
@@ -53,28 +54,28 @@ def create_merkle_tree(data):
 
     while True:
         for node in nodes:
-            # if we have a left and right hash, make a new node!
-            if left_block_hash and right_block_hash:
-                n = MerkleNode(left_block_hash, right_block_hash)
+            # if we have a left and right child, make a new node!
+            if left_child and right_child:
+                n = MerkleNode(left_child, right_child)
                 current_level.append(n)
                 # reset left & right nodes
-                left_block_hash, right_block_hash = node.hash, ""
-            elif not left_block_hash:
-                left_block_hash = node.hash
+                left_child, right_child = node, ""
+            elif not left_child:
+                left_child = node
             else:
-                right_block_hash = node.hash
+                right_child = node
 
         # if we any nodes remaining, add them to our layer!
-        if left_block_hash and right_block_hash:
-            n = MerkleNode(left_block_hash, right_block_hash)
+        if left_child and right_child:
+            n = MerkleNode(left_child, right_child)
             current_level.append(n)
-            left_block_hash, right_block_hash = "", ""
-        elif left_block_hash:
+            left_child, right_child = "", ""
+        elif left_child:
             # if there's a single left block, there was an odd number of nodes
             # we pair the hash with itself and create a new node
-            n = MerkleNode(left_block_hash, left_block_hash)
+            n = MerkleNode(left_child, left_child)
             current_level.append(n)
-            left_block_hash, right_block_hash = "", ""
+            left_child, right_child = "", ""
 
         # Now, add the new nodes to the list we'll use to create the next level
         nodes = []
@@ -94,9 +95,7 @@ def create_merkle_tree(data):
 # * Visualization Helper Functions *
 
 def get_merkle_root(merkle_tree):
-    for level in merkle_tree:
-        if len(level) == 1: # the merkle root should be the only stage with one item
-            return level[0].hash
+    return merkle_tree[-1][0].hash
 
 
 def print_each_layer_in_tree(merkle_tree):
