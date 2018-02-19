@@ -3,102 +3,109 @@
 
 import hashlib
 
-data_blocks = ["We", "hold", "these", "truths", "to", "be", "self-evident", "that"]
+data_nodes = ["We", "hold", "these", "truths", "to", "be", "self-evident", "that"]
 
-node_string_format = "%s||%s"
+hash_concat_format = "%s||%s"
 
+
+class MerkleNode(object):
+    def __init__(self, left_hash="", right_hash="", node_hash=""):
+        self.left_hash = left_hash
+        self.right_hash = right_hash
+        self.hash = node_hash
+        if not self.hash:
+            self.hash = self.create_hash(left_hash, right_hash)
+
+    def create_hash(self, left_hash, right_hash):
+        header = hash_concat_format % (left_hash, right_hash)
+        h = hashlib.sha256()
+        h.update(header.encode('utf-8'))
+        return h.hexdigest()
+
+    def print_node(self):
+        print("NODE")
+        print("self.left_hash: %s" % self.left_hash)
+        print("self.right_hash: %s" % self.right_hash)
+        print("self.hash: %s" % self.hash)
+        print("______________________________")
 
 
 # * Create A Merkle Tree *
 
 def create_merkle_tree(data):
 
-    blocks = []
-    current_layer = []
+    nodes = []
+    current_level = []
     merkle_tree = []
 
     left_block_hash = ""
     right_block_hash = ""
 
-    # first, convert raw data to hashes
+    # first, convert raw data to nodes
     for item in data:
         h = hashlib.sha256()
         h.update(item.encode('utf-8'))
-        blocks.append(h.hexdigest())
+        node = MerkleNode(node_hash=h.hexdigest())
+        nodes.append(node)
 
     while True:
-        for item in blocks:
+        for node in nodes:
             # if we have a left and right hash, make a new node!
             if left_block_hash and right_block_hash:
-                new_node = create_new_node(hash_left=left_block_hash, hash_right=right_block_hash)
-                current_layer.append(new_node)
-
-                # reset left & right blocks
-                left_block_hash, right_block_hash = item, ""
+                n = MerkleNode(left_block_hash, right_block_hash)
+                current_level.append(n)
+                # reset left & right nodes
+                left_block_hash, right_block_hash = node.hash, ""
             elif not left_block_hash:
-                left_block_hash = item
+                left_block_hash = node.hash
             else:
-                right_block_hash = item
+                right_block_hash = node.hash
 
-        # if we any blocks remaining, add them to our layer!
+        # if we any nodes remaining, add them to our layer!
         if left_block_hash and right_block_hash:
-            new_node = create_new_node(hash_left=left_block_hash, hash_right=right_block_hash)
-            current_layer.append(new_node)
+            n = MerkleNode(left_block_hash, right_block_hash)
+            current_level.append(n)
             left_block_hash, right_block_hash = "", ""
         elif left_block_hash:
-            # if there's a single left block, there was an odd number of blocks
+            # if there's a single left block, there was an odd number of nodes
             # we pair the hash with itself and create a new node
-            new_node = create_new_node(hash_left=left_block_hash, hash_right=left_block_hash)
-            current_layer.append(new_node)
+            n = MerkleNode(left_block_hash, left_block_hash)
+            current_level.append(n)
             left_block_hash, right_block_hash = "", ""
 
-        # Now, add the hashes of each new node to the list we'll use to create the next stage
-        blocks = []
-        for item in current_layer:
-            blocks.append(item["hash"])
+        # Now, add the new nodes to the list we'll use to create the next level
+        nodes = []
+        for node in current_level:
+            nodes.append(node)
 
         # add current layer to merkle_tree
-        merkle_tree.append(current_layer)
+        merkle_tree.append(current_level)
 
-        if len(current_layer) == 1: # if current layer only has one item, we've reached the root
+        if len(current_level) == 1: # if current layer only has one item, we've reached the root
             return merkle_tree
         else:
-            current_layer = [] # otherwise, reset stage and re-loop
-
-
-
-# * Merkle Helper Functions *
-
-def create_new_node(hash_left, hash_right):
-    new_node_hash_string = node_string_format % (hash_left, hash_right)
-    h = hashlib.sha256()
-    h.update(new_node_hash_string.encode('utf-8'))
-    new_node_hash = h.hexdigest()
-
-    new_node = {"hash": new_node_hash,
-                "left": hash_left,
-                "right": hash_right}
-    return new_node
+            current_level = [] # otherwise, reset stage and re-loop
 
 
 
 # * Visualization Helper Functions *
 
 def get_merkle_root(merkle_tree):
-    for item in merkle_tree:
-        if len(item) == 1: # the merkle root should be the only stage with one item
-            return item[0]["hash"]
+    for level in merkle_tree:
+        if len(level) == 1: # the merkle root should be the only stage with one item
+            return level[0].hash
 
 
 def print_each_layer_in_tree(merkle_tree):
-    for i, item in enumerate(merkle_tree):
-        print("Layer %s:" % i)
-        print(item)
+    for i, level in enumerate(merkle_tree):
+        print("Level %s:" % i)
+        for node in level:
+            node.print_node()
 
 
 
 # * Run a simple test *
 
-m = create_merkle_tree(data_blocks)
-print("The merkle root for our data is: %s" % get_merkle_root(m))
-print_each_layer_in_tree(m)
+# m = create_merkle_tree(data_nodes)
+# print("The merkle root for our data is: %s" % get_merkle_root(m))
+# print_each_layer_in_tree(m)
