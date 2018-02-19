@@ -3,10 +3,12 @@
 
 import hashlib
 
-data_nodes = ["We", "hold", "these", "truths", "to", "be", "self-evident", "that"]
+raw_data = ["We", "hold", "these", "truths", "to", "be", "self-evident", "that"]
 
 hash_concat_format = "%s||%s"
 
+
+# * Custom Node Class *
 
 class MerkleNode(object):
     def __init__(self, left_hash="", right_hash="", node_hash=""):
@@ -28,6 +30,7 @@ class MerkleNode(object):
         print("self.right_hash: %s" % self.right_hash)
         print("self.hash: %s" % self.hash)
         print("______________________________")
+
 
 
 # * Create A Merkle Tree *
@@ -106,6 +109,6 @@ def print_each_layer_in_tree(merkle_tree):
 
 # * Run a simple test *
 
-# m = create_merkle_tree(data_nodes)
+# m = create_merkle_tree(raw_data)
 # print("The merkle root for our data is: %s" % get_merkle_root(m))
 # print_each_layer_in_tree(m)
