@@ -11,47 +11,11 @@ hash_concat_format = "%s||%s"
 
 # * Classes *
 
-class MerkleNode(object):
-    def __init__(self, left=None, right=None, parent=None, node_hash=""):
-        self.parent = parent
-        self.left = left
-        self.right = right
-        self.hash = node_hash
-        if not self.hash:
-            self.hash = self.create_hash(left, right)
-
-    def create_hash(self, left_node, right_node):
-        header = self.concat_hashes(left_node.hash, right_node.hash)
-        h = hashlib.sha256()
-        h.update(header.encode('utf-8'))
-        return h.hexdigest()
-
-    def concat_hashes(self, left_string, right_string):
-        return hash_concat_format % (left_string, right_string)
-
-    def print_node(self):
-        print("NODE DETAILS:")
-        print("self.hash: %s" % self.hash)
-        print("self.parent: %s" % self.parent)
-        if self.left and self.right:
-            print("self.left.hash: %s" % self.left.hash)
-            print("self.right.hash: %s" % self.right.hash)
-        print("self.hash: %s" % self.hash)
-        print("______________________________")
-
-
-
 class MerkleTree(object):
     def __init__(self, data):
         self.is_ready = False
         self.node_table = {}
-        self.tree = self.create_merkle_tree_from_data(data)
-
-    def get_root(self):
-        if self.is_ready:
-            return self.tree.hash
-        else:
-            print("Tree is not ready!")
+        self.root = self.create_merkle_tree_from_data(data)
 
     def create_merkle_tree_from_data(self, data):
 
@@ -127,8 +91,49 @@ class MerkleTree(object):
         h.update(val.encode('utf-8'))
         return h.hexdigest()
 
+    def get_root(self):
+        if self.is_ready:
+            return self.root.hash
+        else:
+            print("Tree is not ready!")
+
     def get_node(self, hash_val):
         return self.node_table.get(hash_val)
+
+
+
+
+class MerkleNode(object):
+    def __init__(self, left=None, right=None, parent=None, node_hash=""):
+        self.parent = parent
+        self.left = left
+        self.right = right
+        self.hash = node_hash
+        if not self.hash:
+            self.hash = self.create_hash(left, right)
+
+    def create_hash(self, left_node, right_node):
+        header = self.concat_hashes(left_node.hash, right_node.hash)
+        h = hashlib.sha256()
+        h.update(header.encode('utf-8'))
+        return h.hexdigest()
+
+    def concat_hashes(self, left_string, right_string):
+        return hash_concat_format % (left_string, right_string)
+
+    def print_node(self):
+        print("NODE DETAILS:")
+        print("self.hash: %s" % self.hash)
+        print("self.parent: %s" % self.parent)
+        if self.left and self.right:
+            print("self.left.hash: %s" % self.left.hash)
+            print("self.right.hash: %s" % self.right.hash)
+        print("self.hash: %s" % self.hash)
+        print("______________________________")
+
+
+
+
 
 
 
@@ -176,7 +181,7 @@ if __name__ == "__main__":
 
     m = MerkleTree(data=raw_data)
 
-    print("Tree successfully created: %s" % m.tree)
+    print("Tree successfully created: %s" % m.root)
 
     search_value = "self-evident"
 

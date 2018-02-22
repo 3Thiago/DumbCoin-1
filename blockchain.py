@@ -1,7 +1,7 @@
 import proof
 import hashlib
 
-work_factor = 4 # global work factor
+work_factor = 5 # global work factor
 
 class Blockchain(object):
     def __init__(self, data):
@@ -34,10 +34,35 @@ class Blockchain(object):
                 header_hash = self.hash_value(prev_hash + content + nonce)
                 self.blocks.append(Block(header_hash, prev_hash, nonce, content))
 
+    def add_data(self, data):
+        if not data:
+            raise Exception("Can't create a blockchain without data!")
+
+        if not type(data) == list:
+            raise Exception("Data must be a list of strings!")
+
+        for i, item in enumerate(data):
+            # ensure each item is a string
+            item = str(item)
+
+            print("Adding item to blockchain: %s" % item)
+            prev_hash = self.blocks[i-1].header_hash
+            content = item
+            nonce = proof.mint(prev_hash + content, work_factor)
+            header_hash = self.hash_value(prev_hash + content + nonce)
+            self.blocks.append(Block(header_hash, prev_hash, nonce, content))
+
+    def remove_data(self, data):
+        raise Exception("This is the blockchain, brah. No data shall be removed.")
+
     def hash_value(self, value):
         h = hashlib.sha256()
         h.update(value.encode('utf-8'))
         return h.hexdigest()
+
+    def print_all_blocks(self):
+        for block in self.blocks:
+            block.print_block()
 
 
 class Block(object):
@@ -64,5 +89,9 @@ if __name__ == "__main__":
 
     print("Created a blockchain with the following blocks...")
 
-    for block in new_blockchain.blocks:
-        block.print_block()
+    # add new data
+    print("Adding MORE data to an existing blockchain....")
+
+    new_blockchain.add_data("Seriously, most sitcoms just aren't that good.".split(" "))
+
+    new_blockchain.print_all_blocks()

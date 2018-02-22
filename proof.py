@@ -16,7 +16,7 @@ def mint(challenge, work_factor):
 def verify(challenge, work_factor, nonce):
     # create properly-formatted header
     full_header = challenge + nonce
-    # get SHA256 hash of header
+    # hash it!
     h = hashlib.sha256()
     h.update(full_header.encode('utf-8'))
     hash_output = h.hexdigest()
