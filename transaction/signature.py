@@ -1,7 +1,7 @@
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
-from Crypto import Signature
 from Crypto import Random
+from Crypto.Signature import pkcs1_15
 
 class Signature(object):
     def generate_keys(self):
@@ -25,17 +25,18 @@ if __name__ == "__main__":
     keyPair = RSA.generate(1024, random_generator)
     pubKey = keyPair.publickey()
 
-    data_to_sign = "This is a sample transaction".encode('utf-8')
+    data_to_sign = b"This is a sample transaction"
 
-    hashA = SHA256.new(data_to_sign).digest()
-    signature = keyPair.sign(hashA, '')
+    hashA = SHA256.new(data_to_sign)
+
+    signature = pkcs1_15.new(keyPair).sign(hashA)
 
     print("Hash of transaction: %s" % hashA)
     print("Signature: %s" % repr(signature))
 
-    data_to_verify = "This is a sample transaction".encode('utf-8')
+    data_to_verify = b"This is a sample transaction"
 
-    if pubKey.verify(hashA, signature):
+    if pkcs1_15.new(pubKey).verify(hashA, signature):
         print("Signature is valid!")
     else:
         print("Signature is not valid!")
