@@ -1,31 +1,34 @@
-# Proof of work exercise
+# Build a blockchain!
 
-Write two methods, one called `mint` and one called `verify`.
+In this assignment, you'll be building a blockchain from scratch. You'll want to build a block class, and then a blockchain class that includes all blocks.
 
-* `mint`
-  - Mint should take two arguments: a `challenge` (random integer) and a `work_factor` (number of leading 0s in the hash).
-  - It should return a `token`, which is a random string such that SHA2(`challenge` || `token`) starts with at least `work_factor` many 0s.
-  - Use hex encoding rather than binary encoding for simplicity. (You'll want no more than 4 for your work factor.)
-* `verify`
-  - This should take three arguments: the `challenge`, the `work_factor`, and the `token`.
-  - It should return `true` or `false` based on whether the token is valid.
+* Block
+  - `content` (string)
+  - `previous_hash` (string)
+  - `nonce` (string/number)
 
-Bonus: if you have extra time, add timestamping and implement a cache of recent tokens so that that double-spends are rejected.
+* Blockchain
+  - `blocks` (array)
 
+I should be able to initialize your blockchain as `Blockchain.new("this is a string".split(" "))` and have it automatically create blocks, compute proof of work for each block, and chain them all together in a blockchain. You should also be able to append new blocks to this blockchain.
 
 <hr>
 
-# Merkle tree exercise
+# Putting it all together: your first cryptocurrency
 
-* Generate a Merkle tree given the following body of data, using SHA-2 as your hashing algorithm
-  - Your data is the following blocks:
-  - "We", "hold", "these", "truths", "to", "be, "self-evident", "that"
-* In the internal stages, concatenate blocks as so "#{blockA.hash}||#{blockB.hash}" <b><-Be sure to use this exact string format</b>
-* Do not use any special padding for leaf vs internal nodes
-* The merkle root should be equal to `4a359c93d6b6c9beaa3fe8d8e68935aa5b5081bd2603549af88dee298fbfdd0a`
+It's time now to build our first cryptocurrency!
 
-Bonus: create a padding scheme so that arbitrary numbers of blocks can be Merkleized.
+Naturally this is going to be a toy cryptocurrency and we're going to be cutting some corners. But our goal is to have a network of full nodes that are achieving consensus on the same blockchain.
 
-Bonus 2: add different padding to the leaves as opposed to internal nodes, so that preimage attacks are impossible.
+Here are the recommended steps:
 
-Bonus 3: implement an interface for Merkle proofs. Have a `prove_inclusion(block)` function and a `verify_inclusion(proof, merkle_root)` function.
+1. First, build out your blockchain from the blockchain assignment.
+2. You'll want to adapt this blockchain to store transactions rather than random strings. I recommend creating a `Transaction` class, which includes a `from` (public key), `to` (public key), `amount` (int), and `signature` (string). Have each block contain one transaction for simplicity.
+3. Make your blockchain validate that all of the transactions within the blockchain are valid—i.e., each transaction does not put any party into a negative balance. You'll want to start all blockchains with a genesis block that gives someone seed money to begin the chain.
+4. Implement a fork choice rule. Given your current blockchain and a new blockchain, write a function that replaces the old blockchain with a new blockchain if it's longer than your current blockchain (and valid!)
+5. Go back to your gossip protocol and adapt it to gossip blockchains rather than random messages. You may want to use a good marshalling library for your language to make it easier to serialize and deserialize your objects. Apply the fork choice rule to any message you receive.
+6. Give each node a public key and private key. Give it an endpoint so that another node can query it for its public key.
+7. Give each node a `transfer` endpoint, which will make it query another node for its public key, and then transfer that node some of its money.
+8. See the blockchain in action!
+
+That said, feel free to approach this in whatever way you feel makes the most sense.

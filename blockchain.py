@@ -1,4 +1,4 @@
-import proof
+from proof import proof
 import hashlib
 
 work_factor = 5 # global work factor
