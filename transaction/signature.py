@@ -3,6 +3,9 @@ from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.Signature import pkcs1_15
+import ast
+import binascii
+import hashlib
 
 class Signature(object):
     def generate_keys(self):
@@ -10,59 +13,58 @@ class Signature(object):
         pass
 
     def sign(message, secret_key):
-        # should do: secret_key.encrypt(message)
+        # so your signature should probably do: `priv_key.encrypt(hash(to, from, amount))
         pass
 
     def verify(public_key, message, signature):
-        # should do: public_key.decrypt(signature) == message
+        # and verify should roughly check: pub_key.decrypt(signature) == hash(to, from, amount)
         pass
+
+
+
+
+def bin2hex(binStr):
+    return binascii.hexlify(binStr)
+
+def hex2bin(hexStr):
+    return binascii.unhexlify(hexStr)
+
 
 
 if __name__ == "__main__":
     # Experimenting with pycryptodome Library
     # Using video: https://www.youtube.com/watch?v=OKg4PqD01Z0
+    # and: https://stackoverflow.com/questions/21327491/using-pycrypto-how-to-import-a-rsa-public-key-and-use-it-to-encrypt-a-string/26988465#26988465
 
-    random_generator = Random.new().read
-    keyPair = RSA.generate(1024, random_generator)
-    secret_key = keyPair.exportKey()
-    pubKey = keyPair.publickey()
+    key = RSA.generate(2048)
 
-    # imagine I'm a random person encrypting data for public key above...
-    data_to_encrypt = b"Encryption is deceptively hard."
-    recipient_key = pubKey
+    message = b"This is the message"
+    tampered_message = b"This i th message"
 
-    # Encrypt data with the public RSA key
-    sender_cipher_AES = AES.new(pubKey.exportKey(), AES.MODE_EAX)
-    encrypted_data = sender_cipher_AES.encrypt_and_digest(data_to_encrypt)
+    binary_public_key = key.exportKey('DER')
+    binary_private_key = key.publickey().exportKey('DER')
 
-    recipient_cipher_rsa = PKCS1_OAEP.new(secret_key)
-    decrypted_data = recipient_cipher_rsa.decrypt(encrypted_data)
+    public_cipher = PKCS1_OAEP.new(key)
+    private_cipher = PKCS1_OAEP.new(key.publickey())
+
+    encrypted = public_cipher.encrypt(tampered_message)
+
+    sig = private_cipher.encrypt(message)
+
+    decrypted_message = public_cipher.decrypt(ast.literal_eval(str(encrypted)))
+
+    decrypted_signature = public_cipher.decrypt(ast.literal_eval(str(sig)))
 
 
-    print("Secret key is: %s" % secret_key)
+    print("This is the signature: %s" % bin2hex(sig))
     print("")
-    print("Public key is: %s" % pubKey.exportKey())
+    print("This is the encrypted message: %s" % bin2hex(encrypted))
     print("")
-    print("Encrypted data is: %s" % encrypted_data)
+    print("Decrypted signature: %s" % decrypted_signature)
     print("")
-    print("Decrypted data is: %s" % decrypted_data)
+    print("Decrypted message: %s" % decrypted_message)
 
-
-'''
-    data_to_sign = b"This is a sample transaction"
-
-    hashA = SHA256.new(data_to_sign)
-
-    signature = pkcs1_15.new(keyPair).sign(hashA)
-
-    print("Hash of transaction: %s" % hashA)
-    print("Signature: %s" % signature)
-
-    data_to_verify = b"This is a sample transaction"
-
-    if pkcs1_15.new(pubKey).verify(hashA, signature):
-        print("Signature is valid!")
+    if decrypted_signature == decrypted_message:
+        print("Holy shit, the signature is valid!")
     else:
-        print("Signature is not valid!")
-
-        '''
+        print("Signature is NOT valid!")
