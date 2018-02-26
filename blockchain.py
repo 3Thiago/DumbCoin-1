@@ -4,6 +4,7 @@ from transaction.signature import Signature
 import hashlib
 
 work_factor = 5 # global work factor
+seed_coins = 1000000 # given to miner of Gensis node
 
 class Blockchain(object):
     def __init__(self, transactions=None):
@@ -122,17 +123,26 @@ if __name__ == "__main__":
 
     pk, sk = Signature.generate_keys()
 
+    print("Your public key is:")
+    print(pk)
+
+    print("Your secret key is:")
+    print(sk)
+
     # Create a few seed transactions and add to blockchain
     new_blockchain = None
-    for i in range(3):
-        to_pk = input("Give seed money to:")
-        amount = int(input("Amount:"))
-        tx = Transaction(pk, to_pk, amount) # all transactions sent from God node
-        tx.sign(sk)
-
+    for i in range(4):
+        # if there's no blockchain, we must mine the Genesis node
         if not new_blockchain:
+            god_pk, god_sk = Signature.generate_keys()
+            tx = Transaction(god_pk, pk, seed_coins)
+            tx.sign(god_sk)
             new_blockchain = Blockchain([tx])
         else:
+            to_pk = input("Give seed money to:")
+            amount = int(input("Amount:"))
+            tx = Transaction(pk, to_pk, amount) # all transactions sent from God node
+            tx.sign(sk)
             new_blockchain.add_transactions([tx])
 
     # test balance function
