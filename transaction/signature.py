@@ -32,11 +32,10 @@ class Signature(object):
         pk_object = rsa.PublicKey.load_pkcs1(pk_decoded, format='DER')
 
         isValid = False
+        
+        # using rsa library's verify function for convenience
         try:
-            # using rsa library's verify function for convenience
             isValid = rsa.verify(msg, sig_decoded, pk_object)
-            if isValid:
-                print("signature is valid!")
         except:
             print("signature is not valid!")
         return isValid

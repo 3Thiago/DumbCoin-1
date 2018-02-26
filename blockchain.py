@@ -28,16 +28,15 @@ class Blockchain(object):
                 new_block = Block.create_from_transaction(tx, prev_hash)
                 self.blocks.append(new_block)
             else:
-                # TODO: Add balance verification!
-                if not Signature.verify(tx.from_pk, tx.to_string_for_hashing(), tx.signature):
-                    print("Transaction signature is NOT valid.")
+                if not self.validate_transaction(tx):
+                    print("Transaction is NOT valid.")
                     return
                 new_block = Block.create_from_transaction(tx, self.blocks[-1].header_hash)
                 self.blocks.append(new_block)
 
     def add_transactions(self, transactions):
         if not transactions:
-            print("Can't create a blockchain without a transaction!")
+            print("transactions cannot be empty!")
             return
 
         if not type(transactions) == list:
@@ -45,10 +44,7 @@ class Blockchain(object):
             return
 
         for i, tx in enumerate(transactions):
-            print("Adding transaction to blockchain: %s" % tx)
-            # TODO: Add balance verification!
-            if not Signature.verify(tx.from_pk, tx.to_string_for_hashing(), tx.signature):
-                print("Transaction signature is NOT valid.")
+            if not self.validate_transaction(tx):
                 return
             new_block = Block.create_from_transaction(tx, self.blocks[-1].header_hash)
             self.blocks.append(new_block)
@@ -56,12 +52,12 @@ class Blockchain(object):
     def remove_data(self, data):
         raise Exception("This is the blockchain, brah. No data shall be removed.")
 
-    def validate_transaction(tx):
-        # check if signature is valid
+    def validate_transaction(self, tx):
+        # 1. validate signature
         isValid = Signature.verify(tx.from_pk, tx.to_string_for_hashing(), tx.signature)
         if not isValid:
             return False
-        # check if sender has sufficient funds
+        # 2. validate sender balance
         balance = BlockAssist.get_balance(self, tx.from_pk)
         if tx.amount > balance:
             print("Sender doesn't have sufficient funds for this transaction!")
@@ -84,7 +80,7 @@ class Block(object):
 
     def create_from_transaction(tx, prev_hash):
         tx_hash = HashAssist.hash_value(tx.to_string_for_hashing())
-        print("Mining for nonce....")
+        print("Mining nonce....")
         nonce = proof.mint(prev_hash + tx_hash, work_factor) # mine for nonce
         header_hash = HashAssist.hash_value(prev_hash + tx_hash + nonce)
         return Block(header_hash, prev_hash, nonce, tx_hash, tx)
@@ -151,4 +147,4 @@ if __name__ == "__main__":
         balance = BlockAssist.get_balance(new_blockchain, search_pk)
         print(balance)
 
-    new_blockchain.print_all_blocks()
+    # new_blockchain.print_all_blocks()
