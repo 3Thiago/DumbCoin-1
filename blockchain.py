@@ -1,5 +1,6 @@
 from proof import proof
 from transaction.transaction import Transaction
+from transaction.signature import Signature
 import hashlib
 
 work_factor = 5 # global work factor
@@ -106,18 +107,25 @@ class Block(object):
 
 if __name__ == "__main__":
 
-    tx1 = Transaction("God", "Stew", 1000, "Signature Goes Here!")
-    new_blockchain = Blockchain([tx1])
+    tx1 = Transaction("God", "Stew", 1000)
+    print("Created transaction...")
+    print(tx1)
 
-    print("Blockchain created with genesis block!")
+    print("Signing transaction...")
+    pk, sk = Signature.generate_keys()
+    tx1.sign(sk)
+    print("Transaction's new value: %s" % tx1)
 
-    for i in range(3):
-        print("Let's send some money around!")
-        from_pk = input("From Public Key:")
-        to_pk = input("To Public Key:")
-        amount = int(input("Amount:"))
 
-        new_tx = Transaction(from_pk, to_pk, amount, "Signature Goes Here!")
-        new_blockchain.add_transactions([new_tx])
-
-    new_blockchain.print_all_blocks()
+    # print("Blockchain created with genesis block!")
+    #
+    # for i in range(3):
+    #     print("Let's send some money around!")
+    #     from_pk = input("From Public Key:")
+    #     to_pk = input("To Public Key:")
+    #     amount = int(input("Amount:"))
+    #
+    #     new_tx = Transaction(from_pk, to_pk, amount, "Signature Goes Here!")
+    #     new_blockchain.add_transactions([new_tx])
+    #
+    # new_blockchain.print_all_blocks()

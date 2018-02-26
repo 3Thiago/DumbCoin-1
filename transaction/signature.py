@@ -1,70 +1,44 @@
-from Crypto import Random
-from Crypto.Hash import SHA256
-from Crypto.PublicKey import RSA
-from Crypto.Cipher import AES, PKCS1_OAEP
-from Crypto.Signature import pkcs1_15
-import ast
-import binascii
-import hashlib
+import rsa
+import base64
 
 class Signature(object):
-    def generate_keys(self):
-        # return secret_key, public_key
-        pass
 
+    # * generates keys and returns them as b64 of DER format *
+    def generate_keys(length=2048):
+        pub_key, priv_key = rsa.newkeys(length)
+        pub_key_b64 = base64.b64encode(pub_key.save_pkcs1(format='DER'))
+        priv_key_b64 = base64.b64encode(priv_key.save_pkcs1(format='DER'))
+        return pub_key_b64, priv_key_b64
+
+    # * hashes the message, signs the hash, returns b64 of signature *
     def sign(message, secret_key):
-        # so your signature should probably do: `priv_key.encrypt(hash(to, from, amount))
-        pass
+        sk_object = rsa.PrivateKey.load_pkcs1(base64.b64decode(secret_key), format='DER')
+        signature = rsa.sign(message, sk_object, 'SHA-256')
+        return base64.b64encode(signature)
 
+    # * using rsa library's verify function for convenience *
     def verify(public_key, message, signature):
-        # and verify should roughly check: pub_key.decrypt(signature) == hash(to, from, amount)
-        pass
-
-
-
-
-def bin2hex(binStr):
-    return binascii.hexlify(binStr)
-
-def hex2bin(hexStr):
-    return binascii.unhexlify(hexStr)
+        pk_object = rsa.PublicKey.load_pkcs1(base64.b64decode(public_key), format='DER')
+        isValid = False
+        try:
+            isValid = rsa.verify(message, signature, pk_object)
+            if isValid:
+                print("signature is valid!")
+        except:
+            print("signature is not valid!")
 
 
 
 if __name__ == "__main__":
-    # Experimenting with pycryptodome Library
-    # Using video: https://www.youtube.com/watch?v=OKg4PqD01Z0
-    # and: https://stackoverflow.com/questions/21327491/using-pycrypto-how-to-import-a-rsa-public-key-and-use-it-to-encrypt-a-string/26988465#26988465
 
-    key = RSA.generate(2048)
+    msg = "This is the data we we'll sign!".encode('utf-8')
 
-    message = b"This is the message"
-    tampered_message = b"This i th message"
+    print("Generating keys...")
+    pk, sk = Signature.generate_keys()
 
-    binary_public_key = key.exportKey('DER')
-    binary_private_key = key.publickey().exportKey('DER')
+    print("Signing data: %s" % msg)
+    signature = Signature.sign(msg,sk)
+    print("Successfully signed with signature: %s" % signature)
 
-    public_cipher = PKCS1_OAEP.new(key)
-    private_cipher = PKCS1_OAEP.new(key.publickey())
-
-    encrypted = public_cipher.encrypt(tampered_message)
-
-    sig = private_cipher.encrypt(message)
-
-    decrypted_message = public_cipher.decrypt(ast.literal_eval(str(encrypted)))
-
-    decrypted_signature = public_cipher.decrypt(ast.literal_eval(str(sig)))
-
-
-    print("This is the signature: %s" % bin2hex(sig))
-    print("")
-    print("This is the encrypted message: %s" % bin2hex(encrypted))
-    print("")
-    print("Decrypted signature: %s" % decrypted_signature)
-    print("")
-    print("Decrypted message: %s" % decrypted_message)
-
-    if decrypted_signature == decrypted_message:
-        print("Holy shit, the signature is valid!")
-    else:
-        print("Signature is NOT valid!")
+    print("Verifying signature...")
+    Signature.verify(pk, msg, signature)
