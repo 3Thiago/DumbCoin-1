@@ -32,8 +32,9 @@ class Blockchain(object):
                     print("Transaction is NOT valid.")
                     return
                 new_block = Block.create_from_transaction(tx, self.blocks[-1].header_hash)
-                self.blocks.append(new_block)
+                self.verify_and_add_block(new_block)
 
+    # * mine a new block with transaction(s) *
     def add_transactions(self, transactions):
         if not transactions:
             print("transactions cannot be empty!")
@@ -47,7 +48,25 @@ class Blockchain(object):
             if not self.validate_transaction(tx):
                 return
             new_block = Block.create_from_transaction(tx, self.blocks[-1].header_hash)
-            self.blocks.append(new_block)
+            self.verify_and_add_block(new_block)
+
+    # * validate a block before adding to current chain *
+    def verify_and_add_block(self, block):
+        # 1. validate transaction(s) in block
+        tx = block.transactions
+        if not self.validate_transaction(tx):
+            print("Block contains invalid transactions.")
+            return
+        # 2. hash transaction(s)
+        tx_hash = HashAssist.hash_value(tx.to_string_for_hashing())
+        # 3. validate header
+        header_string = block.prev_hash + tx_hash + block.nonce
+        header_hash = HashAssist.hash_value(header_string)
+        if not block.header_hash == header_hash:
+            print("Block header invalid!")
+            return
+
+        self.blocks.append(block)
 
     def remove_data(self, data):
         raise Exception("This is the blockchain, brah. No data shall be removed.")
