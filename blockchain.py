@@ -1,6 +1,6 @@
-from proof import proof
 from transaction.transaction import Transaction
 from transaction.signature import Signature
+from proof import proof
 import hashlib
 
 work_factor = 4 # global work factor
@@ -80,9 +80,6 @@ class Blockchain(object):
             return
         self.blocks.append(block)
 
-    def remove_data(self, data):
-        raise Exception("This is the blockchain, brah. No data shall be removed.")
-
     # * validates a transaction's signature & amount *
     def validate_transaction(self, tx):
         # 1. validate signature
@@ -97,9 +94,15 @@ class Blockchain(object):
             return False
         return True
 
+    def get_size(self):
+        return len(self.blocks)
+
     def print_all_blocks(self):
         for block in self.blocks:
             block.print_block()
+
+    def remove_data(self, data):
+        raise Exception("This is the blockchain, brah. No data shall be removed.")
 
 
 
@@ -137,6 +140,7 @@ class HashAssist(object):
         return h.hexdigest()
 
 class BlockAssist(object):
+    # * returns unspent transaction balance for a public key *
     def get_balance(pub_key, blocks):
         balance = 0
         for block in blocks:
@@ -164,11 +168,23 @@ class BlockAssist(object):
             i += 1
         return True
 
+    # * returns the longest, valid chain *
+    # Assumes that chainA is node's current chain and has therefore already been validated!
+    def fork_choice(chainA, chainB):
+        if chainB.get_size() > chainA.get_size():
+            if BlockAssist.validate_all_transactions_and_blocks(chainB):
+                print("ChainB is longer and valid!")
+                return chainB
+        else:
+            return chainA
+
 
 
 if __name__ == "__main__":
 
     pk, sk = Signature.generate_keys()
+
+    print("Firing up a new node!")
 
     print("Your public key is:")
     print(pk)
@@ -176,13 +192,15 @@ if __name__ == "__main__":
     print("Your secret key is:")
     print(sk)
 
-    # Create a few seed transactions and add to blockchain
+    # Generate God keys to create seed transaction
+    god_pk, god_sk = Signature.generate_keys()
+    god_public_key = god_pk # store in global variable
+
+    # Create two blockchains and implement fork choice
     new_blockchain = None
     for i in range(4):
         # if there's no blockchain, we must mine the Genesis node
         if not new_blockchain:
-            god_pk, god_sk = Signature.generate_keys()
-            god_public_key = god_pk # store in global variable
             tx = Transaction(god_pk, pk, seed_coins)
             tx.sign(god_sk)
             new_blockchain = Blockchain([tx])
@@ -193,16 +211,31 @@ if __name__ == "__main__":
             tx.sign(sk)
             new_blockchain.add_transactions([tx])
 
-    print("Let's now pretend we just imported this blockchain...")
-    print("And are validating each block...")
+    new_blockchain_2 = None
+    for i in range(3):
+        # if there's no blockchain, we must mine the Genesis node
+        if not new_blockchain_2:
+            tx = Transaction(god_pk, pk, seed_coins)
+            tx.sign(god_sk)
+            new_blockchain_2 = Blockchain([tx])
+        else:
+            to_pk = input("Give seed money to:")
+            amount = int(input("Amount:"))
+            tx = Transaction(pk, to_pk, amount) # all transactions sent from God node
+            tx.sign(sk)
+            new_blockchain_2.add_transactions([tx])
 
-    if BlockAssist.validate_all_transactions_and_blocks(new_blockchain):
-        print("All blocks are valid!")
+    print("We now have TWO blockchains.")
+    print("Let's run a fork choice rule!")
+
+    if BlockAssist.fork_choice(new_blockchain, new_blockchain_2) == new_blockchain_2:
+        print("We should update our node's blockchain to blockchain 2!")
     else:
-        print("Some blocks were invalid!")
+        print("Our first blockchain was the longest, valid chain!")
+
 
     # test balance function
-    for i in range(2):
-        search_pk = input("Get balance of public key:")
-        balance = BlockAssist.get_balance(search_pk, new_blockchain.blocks)
-        print(balance)
+    # for i in range(2):
+    #     search_pk = input("Get balance of public key:")
+    #     balance = BlockAssist.get_balance(search_pk, new_blockchain.blocks)
+    #     print(balance)
