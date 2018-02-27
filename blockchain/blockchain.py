@@ -1,11 +1,10 @@
-from transaction.transaction import Transaction
-from transaction.signature import Signature
-from proof import proof
+from .transaction.transaction import Transaction
+from .transaction import signature
+from .proof import proof
 import hashlib
 
 work_factor = 4 # global work factor
-seed_coins = 1000000 # given to miner of Gensis node
-god_public_key = None # store the public key of the entity that creates seed coins
+seed_coin_supply = 1000000 # given to miner of Gensis node
 
 class Blockchain(object):
 
@@ -20,7 +19,7 @@ class Blockchain(object):
                 # Create genesis block with first item
                 if i == 0:
                     # we'll only verify the signature for the genesis block since nobody holds a balance yet
-                    if not Signature.verify(tx.from_pk, tx.to_string_for_hashing(), tx.signature):
+                    if not signature.verify(tx.from_pk, tx.to_string_for_hashing(), tx.signature):
                         print("Genesis transaction signature is NOT valid.")
                         return
                     prev_hash = "0" # arbitrary prev_hash for genesis block
@@ -37,11 +36,8 @@ class Blockchain(object):
     def init_with_genesis_block(self, block):
         # genesis block contains single seed transaction from God
         genesis_tx = block.transactions
-        if not genesis_tx.from_pk == god_public_key:
-            print("Genesis transaction appears not be divine!")
-            return
-        # verify signature
-        if not Signature.verify(tx.from_pk, tx.to_string_for_hashing(), tx.signature):
+        # we only verify the signature since we can't retain sk for God and create new transactions
+        if not signature.verify(tx.from_pk, tx.to_string_for_hashing(), tx.signature):
             print("Genesis transaction signature is NOT valid.")
             return
         self.blocks.append(block)
@@ -83,12 +79,12 @@ class Blockchain(object):
     # * validates a transaction's signature & amount *
     def validate_transaction(self, tx):
         # 1. validate signature
-        isValid = Signature.verify(tx.from_pk, tx.to_string_for_hashing(), tx.signature)
+        isValid = signature.verify(tx.from_pk, tx.to_string_for_hashing(), tx.signature)
         if not isValid:
             print("Signature not valid")
             return False
         # 2. validate sender balance
-        balance = BlockAssist.get_balance(tx.from_pk, self.blocks)
+        balance = get_balance(tx.from_pk, self.blocks)
         if tx.amount > balance:
             print("Sender doesn't have sufficient funds for this transaction!")
             return False
@@ -139,50 +135,58 @@ class HashAssist(object):
         h.update(value.encode('utf-8'))
         return h.hexdigest()
 
-class BlockAssist(object):
-    # * returns unspent transaction balance for a public key *
-    def get_balance(pub_key, blocks):
-        balance = 0
-        for block in blocks:
-            if block.transactions.to_pk == pub_key:
-                balance += block.transactions.amount
-            if block.transactions.from_pk == pub_key:
-                balance -= block.transactions.amount
-        return balance
+# * returns unspent transaction balance for a public key *
+def get_balance(pub_key, blocks):
+    balance = 0
+    for block in blocks:
+        if block.transactions.to_pk == pub_key:
+            balance += block.transactions.amount
+        if block.transactions.from_pk == pub_key:
+            balance -= block.transactions.amount
+    return balance
 
-    # * validates all transactions and blocks in a chain *
-    def validate_all_transactions_and_blocks(blockchain):
-        # recreates blockchain from scratch...
-        new_blockchain = None
-        # which runs all necessary checks as it builds and adds blocks...
-        i = 0
-        for block in blockchain.blocks:
-            if i == 0:
-                new_blockchain = Blockchain().init_with_genesis_block(block)
-            else:
-                try:
-                    new_blockchain.validate_and_add_block(block)
-                except:
-                    print("Blockchain contains invalid blocks!")
-                    return False
-            i += 1
-        return True
-
-    # * returns the longest, valid chain *
-    # Assumes that chainA is node's current chain and has therefore already been validated!
-    def fork_choice(chainA, chainB):
-        if chainB.get_size() > chainA.get_size():
-            if BlockAssist.validate_all_transactions_and_blocks(chainB):
-                print("ChainB is longer and valid!")
-                return chainB
+# * validates all transactions and blocks in a chain *
+def validate_all_transactions_and_blocks(blockchain):
+    # recreates blockchain from scratch...
+    new_blockchain = None
+    # which runs all necessary checks as it builds and adds blocks...
+    i = 0
+    for block in blockchain.blocks:
+        if i == 0:
+            new_blockchain = Blockchain().init_with_genesis_block(block)
         else:
-            return chainA
+            try:
+                new_blockchain.validate_and_add_block(block)
+            except:
+                print("Blockchain contains invalid blocks!")
+                return False
+        i += 1
+    return True
+
+# * returns the longest, valid chain *
+# Assumes that chainA is node's current chain and has therefore already been validated!
+def fork_choice(chainA, chainB):
+    if chainB.get_size() > chainA.get_size():
+        if validate_all_transactions_and_blocks(chainB):
+            print("ChainB is longer and valid!")
+            return chainB
+    else:
+        return chainA
+
+# * creates God transaction with seed coins
+def create_god_transaction(to_pk):
+    god_pk, god_sk = signature.generate_keys()
+    tx = Transaction(god_pk, to_pk, seed_coin_supply)
+    tx.sign(god_sk)
+    return tx
+
+
 
 
 
 if __name__ == "__main__":
 
-    pk, sk = Signature.generate_keys()
+    pk, sk = signature.generate_keys()
 
     print("Firing up a new node!")
 
@@ -193,8 +197,7 @@ if __name__ == "__main__":
     print(sk)
 
     # Generate God keys to create seed transaction
-    god_pk, god_sk = Signature.generate_keys()
-    god_public_key = god_pk # store in global variable
+    god_pk, god_sk = signature.generate_keys()
 
     # Create two blockchains and implement fork choice
     new_blockchain = None
@@ -228,7 +231,7 @@ if __name__ == "__main__":
     print("We now have TWO blockchains.")
     print("Let's run a fork choice rule!")
 
-    if BlockAssist.fork_choice(new_blockchain, new_blockchain_2) == new_blockchain_2:
+    if fork_choice(new_blockchain, new_blockchain_2) == new_blockchain_2:
         print("We should update our node's blockchain to blockchain 2!")
     else:
         print("Our first blockchain was the longest, valid chain!")

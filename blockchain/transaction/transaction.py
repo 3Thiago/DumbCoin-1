@@ -1,4 +1,4 @@
-from .signature import Signature
+from . import signature
 
 class Transaction(object):
     def __init__(self, from_pk, to_pk, amount, signature=""):
@@ -10,7 +10,7 @@ class Transaction(object):
     # * signs transaction with secret key *
     def sign(self, sk):
         string_to_sign = self.to_string_for_hashing()
-        self.signature = Signature.sign(string_to_sign, sk)
+        self.signature = signature.sign(string_to_sign, sk)
 
     # * returns proper message string for hashing and signing
     def to_string_for_hashing(self):
