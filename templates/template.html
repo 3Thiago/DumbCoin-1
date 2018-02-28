@@ -4,21 +4,36 @@
     <title>Node: {{node.port}}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <link href="https://afeld.github.io/emoji-css/emoji.css" rel="stylesheet">
     <style type="text/css">
       .container {
         max-width: 500px;
         padding-top: 10px;
       }
     </style>
+    <script type="text/javascript">
+      window.onload = function() {
+
+        var a = document.getElementById("secret-key-fill");
+        a.onclick = function() {
+          var x = document.getElementById("secret-key-textfield");
+          x.value = "{{node.secret_key}}"
+          return false;
+        }
+    }
+</script>
   </head>
   <body>
     <div class="container">
       <h3 style="text-align: center; margin-bottom: 5px;">BradfieldCoin</h3>
       <h5 style="text-align: center; color: #3333338a; margin-top: 5px;">Node at Port {{node.port}}</h5>
 
-      <div class="send-transaction-container" style="padding: 10px; background-color: #efefef;">
+      <div class="send-transaction-container" style="padding: 10px; margin-top: 15px; background-color: #efefef; border-radius: 8px;">
         <p>Balance: <span style="color: #14a982; font-size: 16px;"><b>{{balance}}</b></span></p>
         <button onclick="toggleCreateTransaction()">Send Coins</button>
+        {% if errors %}
+          <p class="error" style="color: red; margin-top: 8px; margin-bottom: 3px;">{{errors}}</p>
+        {% endif %}
         <form action="" id="send-transaction-form" method="POST" style="display: none;">
           <span style="margin-top: 5px">To:</span><br>
           <input name="to_public_key" type="text"  placeholder="Public Key">
@@ -27,46 +42,83 @@
           <input name="amount" type="text" placeholder="Ex. 1000">
           <br>
           Secret Key:<br>
-          <input name="secret_key" type="text" placeholder="Your Secret Key">
+          <input id="secret-key-textfield" name="secret_key" type="text" placeholder="Your Secret Key">
+          <a id="secret-key-fill" href="" style="margin-left: 5px">Fill</a>
           <br>
-          <input type="submit" style="margin-top: 5px;" value="Submit">
+          <input id="submit-transaction" type="submit" style="margin-top: 5px;" value="Submit">
         </form>
       </div>
 
 
-      <h6>View Keys</h6>
-      <button onclick="togglePublic()">Public Key</button><br>
+      <button onclick="togglePublic()" style="margin-top: 10px;">View Public Key</button><br>
       <p id="public-key" style="word-break: break-all; display: none;">{{node.public_key}}</p>
-      <button onclick="toggleSecret()" class="secret-key-button">Secret Key</button>
+      <button onclick="toggleSecret()" class="secret-key-button">View Secret Key</button>
       <p id="secret-key" style="word-break: break-all; display: none;">{{node.secret_key}}</p>
       <br>
 
       <hr>
+      <div class="blockchain-explorer-header" style="text-align: center;">
+        <i class="em em-mag_right"></i><i class="em em-chains"></i>
+        <h4>Blockchain Explorer</h4>
+      </div>
       <div class="block-feed" style="word-break: break-all;">
         {% for block in node.blockchain.blocks %}
-          <p><b>Block: {{block.header_hash}}</b></p>
-          <p>Previous Header Hash: {{block.prev_hash}}</p>
-          <p>Transactions Hash: {{block.transactions_hash}}</p>
-          <p>Transactions: {{block.transactions}}</p>
-          <hr>
+          <div class="block" style="padding: 10px; border-radius:8px; background-color: #e6e6e6; margin-top: 8px;">
+            <p style="text-align: center;"><b>Block {{loop.index}}</b></p>
+            <p><b>Header Hash:</b> {{block.header_hash}}</p>
+            <p><b>Previous Header Hash:</b> {{block.prev_hash}}</p>
+            <p><b>Transactions Hash:</b> {{block.transactions_hash}}</p>
+            <p><b>Transactions:</b> {{block.transactions}}</p>
+          </div>
         {% endfor %}
-        <hr>
       </div>
-      <h4>Message Cache</h4>
-      {% for message in node.message_cache %}
-        <p>{{message}}</p>
-      {% endfor %}
+
+      <hr>
+
+      <div class="message-cache-header" style="text-align: center;">
+        <i class="em em-mega"></i><i class="em em-ear"></i>
+        <h4>Message Explorer</h4>
+        <button onclick="toggleMessageCache()" style="margin-top: 10px;">Show</button><br>
+      </div>
+      <div id="message-cache" style="display:none;">
+        {% for message in node.message_cache %}
+        <div class="message" style="padding: 10px; border-radius:8px; background-color: #e6e6e6; margin-top: 8px;">
+          <p style="word-break: break-all;">{{message}}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- The Mining Modal -->
+    <div id="myModal" class="modal">
+
+      <!-- Modal content -->
+      <div class="modal-content">
+        <div class="modal-header">
+          <span class="close">&times;</span>
+          <h3>Transaction Created!</h3>
+        </div>
+        <div class="modal-body">
+          <div class="loader" style="text-align:center; margin: auto;"></div>
+          <p style="margin-top: 10px"><i class="em em-construction_worker"></i><i class="em em-pick"></i><br>Mining New Block...</p>
+        </div>
+      </div>
+
     </div>
 
 
+    <br>
+    <br>
+
+
     <script>
-    function toggleCreateTransaction() {
-        var x = document.getElementById("send-transaction-form");
-        if (x.style.display === "none") {
-            x.style.display = "block";
-        } else {
-            x.style.display = "none";
-        }
+      function toggleCreateTransaction() {
+          var x = document.getElementById("send-transaction-form");
+          if (x.style.display === "none") {
+              x.style.display = "block";
+          } else {
+              x.style.display = "none";
+          }
       }
       function togglePublic() {
           var x = document.getElementById("public-key");
@@ -84,7 +136,64 @@
                 x.style.display = "none";
             }
           }
+          function toggleMessageCache() {
+              var x = document.getElementById("message-cache");
+              if (x.style.display === "none") {
+                  x.style.display = "block";
+              } else {
+                  x.style.display = "none";
+              }
+            }
     </script>
+    <script>
+      // Get the modal
+      var modal = document.getElementById('myModal');
+
+      // Get the button that opens the modal
+      var btn = document.getElementById("submit-transaction");
+
+      // Get the <span> element that closes the modal
+      var span = document.getElementsByClassName("close")[0];
+
+      // When the user clicks the button, open the modal
+      btn.onclick = function() {
+          modal.style.display = "block";
+      }
+
+      // When the user clicks on <span> (x), close the modal
+      span.onclick = function() {
+          modal.style.display = "none";
+      }
+
+      // When the user clicks anywhere outside of the modal, close it
+      window.onclick = function(event) {
+          if (event.target == modal) {
+              modal.style.display = "none";
+          }
+      }
+    </script>
+    <style>
+      .loader {
+        border: 4px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 6px solid #3498db;
+        width: 40px;
+        height: 40px;
+        -webkit-animation: spin 2s linear infinite; /* Safari */
+        animation: spin .7s linear infinite;
+      }
+
+      /* Safari */
+      @-webkit-keyframes spin {
+        0% { -webkit-transform: rotate(0deg); }
+        100% { -webkit-transform: rotate(360deg); }
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
     <style>
       .container input[type="submit"], button{
         background-image: linear-gradient(-180deg, #66A6FF 0%, #7FB4FF 100%);
@@ -100,6 +209,93 @@
       .secret-key-button{
         background-image: linear-gradient(-180deg, #E17676 0%, #DE4C4C 100%);
         margin-top: 10px;
+      }
+
+      /* The Modal (background) */
+      .modal {
+          display: none; /* Hidden by default */
+          position: fixed; /* Stay in place */
+          z-index: 1; /* Sit on top */
+          left: 0;
+          top: 0;
+          width: 100%; /* Full width */
+          height: 100%; /* Full height */
+          overflow: auto; /* Enable scroll if needed */
+          background-color: rgb(0,0,0); /* Fallback color */
+          background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+          -webkit-animation-name: fadeIn; /* Fade in the background */
+          -webkit-animation-duration: 0.4s;
+          animation-name: fadeIn;
+          animation-duration: 0.4s
+      }
+
+      /* Modal Content */
+      .modal-content {
+          position: fixed;
+          bottom: 0;
+          background-color: #fefefe;
+          width: 100%;
+          -webkit-animation-name: slideIn;
+          -webkit-animation-duration: 0.4s;
+          animation-name: slideIn;
+          animation-duration: 0.4s
+      }
+
+      /* The Close Button */
+      .close {
+          color: white;
+          float: right;
+          font-size: 28px;
+          font-weight: bold;
+      }
+
+      .close:hover,
+      .close:focus {
+          color: #000;
+          text-decoration: none;
+          cursor: pointer;
+      }
+
+      .modal-header {
+          padding: 6px 16px;
+          background-color: #5cb85c;
+          color: white;
+      }
+
+      .modal-header h3{
+          margin: 0px;
+      }
+
+      .modal-body {
+          padding: 20px 16px;
+          text-align: center;
+      }
+
+      .modal-footer {
+          padding: 2px 16px;
+          background-color: #5cb85c;
+          color: white;
+      }
+
+      /* Add Animation */
+      @-webkit-keyframes slideIn {
+          from {bottom: -300px; opacity: 0}
+          to {bottom: 0; opacity: 1}
+      }
+
+      @keyframes slideIn {
+          from {bottom: -300px; opacity: 0}
+          to {bottom: 0; opacity: 1}
+      }
+
+      @-webkit-keyframes fadeIn {
+          from {opacity: 0}
+          to {opacity: 1}
+      }
+
+      @keyframes fadeIn {
+          from {opacity: 0}
+          to {opacity: 1}
       }
 
     </style>

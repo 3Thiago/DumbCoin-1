@@ -6,7 +6,6 @@ import json
 import sys
 import random
 import threading
-import uuid
 import webbrowser
 import pickle
 import jsonpickle
@@ -67,30 +66,25 @@ class Node(object):
         self.public_key = pk
         self.secret_key = sk
 
-    def gossip(self):
-
-        # choose & assign new favorite letter
-        self.favorite_letter = random.choice(["a", "b", "c", "d", "e"])
+    def gossip(self, TTL=1):
 
         # prepare message to post to peer
-        message = self.generate_update_message()
+        message = self.generate_update_message(TTL)
 
         # Gossip!
         if self.peer_ports:
             self.post_message_to_random_peer(message)
 
-        # begin 10 second timer
-        threading.Timer(10, self.gossip).start()
 
     # Nodes communicate via their latest blockchain
-    def generate_update_message(self):
+    def generate_update_message(self, TTL=1):
 
         # Create message
         message = {}
         message['originating_port'] = self.port
         message['originating_public_key'] = self.public_key
         message['originating_peer_ports'] = self.peer_ports
-        message['TTL'] = 1
+        message['TTL'] = TTL
         message['blockchain'] = self.blockchain
 
         # return message as json
@@ -105,7 +99,6 @@ class Node(object):
             # send POST request with new state
             print("Sending POST request to URL: %s" % post_to_url)
             resp = requests.post(post_to_url, json=message)
-
 
             # they'll respond with message that includes blockchain
             resp_json = json.dumps(resp.json())
@@ -141,6 +134,7 @@ class Node(object):
                 print("New peer port value: %s" % self.peer_ports)
 
 
+
 # * Rendering Functionality *
 
 def render_front_page(errors="", balance=0):
@@ -161,10 +155,16 @@ def main():
 
     if request.method == "POST":
         print("POST request received with form data:")
-        new_tx = create_transaction_with_form_data(request.form)
-        node.blockchain.add_transactions([new_tx])
-        print("Added a new transaction to the block!")
-        return render_front_page()
+        error = ""
+        try:
+            new_tx = create_transaction_with_form_data(request.form)
+            node.blockchain.add_transactions([new_tx])
+            node.gossip(TTL=2) # gossip new blockchain, with time to live of 2
+        except Exception as exception:
+            error = exception.args[0]
+            print("Exception.args: %s" % error)
+
+        return render_front_page(errors=error)
 
 def create_transaction_with_form_data(form):
     to_pk = form['to_public_key']
@@ -174,6 +174,7 @@ def create_transaction_with_form_data(form):
     tx = transaction.Transaction(node.public_key, to_pk, amount)
     tx.sign(sk)
 
+    node.blockchain.validate_transaction(tx, throw_exception=True)
     return tx
 
 
@@ -196,18 +197,22 @@ def handle_gossip():
             node.blockchain = blockchain.fork_choice(node.blockchain, peer_blockchain)
         node.update_network_state_with_message(decoded_json)
 
+        # check message's TTL to see if we need to gossip
+        message_ttl = decoded_json['TTL']
+        if message_ttl > 1:
+            new_ttl = message_ttl - 1
+            node.gossip(TTL=new_ttl)
+
         return node.generate_update_message()
 
 
 
 if __name__ == "__main__":
 
-    # ask the user if this is the God node
-
     # * Create Node *
     node = Node()
 
     # view node in web browser in new tab
-    webbrowser.open(host_url + (":%s" % node.port), new=2)
+    # webbrowser.open(host_url + (":%s" % node.port), new=2)
 
     app.run(host="127.0.0.1", port=int(node.port))

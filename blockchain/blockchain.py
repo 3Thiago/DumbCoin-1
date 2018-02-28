@@ -3,7 +3,7 @@ from .transaction import signature
 from .proof import proof
 import hashlib
 
-work_factor = 4 # global work factor
+work_factor = 5 # global work factor
 seed_coin_supply = 1000000 # given to miner of Gensis node
 
 class Blockchain(object):
@@ -77,17 +77,28 @@ class Blockchain(object):
         self.blocks.append(block)
 
     # * validates a transaction's signature & amount *
-    def validate_transaction(self, tx):
+    # * added throw_exception param so web client can retrieve error msg
+    def validate_transaction(self, tx, throw_exception=False):
         # 1. validate signature
         isValid = signature.verify(tx.from_pk, tx.to_string_for_hashing(), tx.signature)
         if not isValid:
-            print("Signature not valid")
-            return False
+            error_msg = "Signature not valid!"
+            if throw_exception:
+                print(error_msg)
+                raise Exception(error_msg)
+            else:
+                print(error)
+                return False
         # 2. validate sender balance
         balance = get_balance(tx.from_pk, self.blocks)
         if tx.amount > balance:
-            print("Sender doesn't have sufficient funds for this transaction!")
-            return False
+            error_msg = "Insufficient funds for this transaction!"
+            if throw_exception:
+                print(error_msg)
+                raise Exception(error_msg)
+            else:
+                print(error_msg)
+                return False
         return True
 
     def get_size(self):
