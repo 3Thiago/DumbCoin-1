@@ -13,11 +13,11 @@
   </head>
   <body>
     <div class="container">
-      <h3 style="text-align: center;">BradfieldCoin</h3>
-      <h5 style="text-align: center;">Node on Port {{node.port}}</h5>
+      <h3 style="text-align: center; margin-bottom: 5px;">BradfieldCoin</h3>
+      <h5 style="text-align: center; color: #3333338a; margin-top: 5px;">Node at Port {{node.port}}</h5>
 
       <div class="send-transaction-container" style="padding: 10px; background-color: #efefef;">
-        <p>Balance: <b>{{balance}}</b></p>
+        <p>Balance: <span style="color: #14a982; font-size: 16px;"><b>{{balance}}</b></span></p>
         <button onclick="toggleCreateTransaction()">Send Coins</button>
         <form action="" id="send-transaction-form" method="POST" style="display: none;">
           <span style="margin-top: 5px">To:</span><br>

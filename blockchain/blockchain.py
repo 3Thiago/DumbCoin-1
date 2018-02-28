@@ -37,7 +37,7 @@ class Blockchain(object):
         # genesis block contains single seed transaction from God
         genesis_tx = block.transactions
         # we only verify the signature since we can't retain sk for God and create new transactions
-        if not signature.verify(tx.from_pk, tx.to_string_for_hashing(), tx.signature):
+        if not signature.verify(genesis_tx.from_pk, genesis_tx.to_string_for_hashing(), genesis_tx.signature):
             print("Genesis transaction signature is NOT valid.")
             return
         self.blocks.append(block)
@@ -166,12 +166,15 @@ def validate_all_transactions_and_blocks(blockchain):
 # * returns the longest, valid chain *
 # Assumes that chainA is node's current chain and has therefore already been validated!
 def fork_choice(chainA, chainB):
-    if chainB.get_size() > chainA.get_size():
+    if not chainA:
+        if validate_all_transactions_and_blocks(chainB):
+            print("There's no ChainA, and ChainB is valid!")
+            return chainB
+    elif chainB.get_size() > chainA.get_size():
         if validate_all_transactions_and_blocks(chainB):
             print("ChainB is longer and valid!")
             return chainB
-    else:
-        return chainA
+    return chainA
 
 # * creates God transaction with seed coins
 def create_god_transaction(to_pk):
