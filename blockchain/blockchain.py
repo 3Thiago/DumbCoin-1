@@ -4,7 +4,7 @@ from .proof import proof
 import hashlib
 
 work_factor = 5 # global work factor
-seed_coin_supply = 1000000 # given to miner of Gensis node
+seed_coin_supply = 10000000000 # given to miner of Gensis node
 
 class Blockchain(object):
 

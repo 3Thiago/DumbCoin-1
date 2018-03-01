@@ -34,6 +34,7 @@ class Node(object):
         self.network_state = {} # {'port1': 'public_key1', 'port2': 'public_key2', etc.}
         self.blockchain = None
         self.message_cache = []
+        self.last_message = None
         self.peer_ports = self.get_peer_port()
 
         # generate node's public and private keys
@@ -66,14 +67,17 @@ class Node(object):
         self.public_key = pk
         self.secret_key = sk
 
-    def gossip(self, TTL=1):
+    def gossip(self, TTL=1, peers=1):
+
+        print("Gossiping, with TTL: %s" % TTL)
 
         # prepare message to post to peer
         message = self.generate_update_message(TTL)
 
-        # Gossip!
+        # Gossip to x peers!
         if self.peer_ports:
-            self.post_message_to_random_peer(message)
+            for i in range(0, peers):
+                self.post_message_to_random_peer(message)
 
 
     # Nodes communicate via their latest blockchain
@@ -153,13 +157,14 @@ def main():
     if request.method == "GET":
         return render_front_page()
 
+    # new transaction from form
     if request.method == "POST":
         print("POST request received with form data:")
         error = ""
         try:
             new_tx = create_transaction_with_form_data(request.form)
             node.blockchain.add_transactions([new_tx])
-            node.gossip(TTL=2) # gossip new blockchain, with time to live of 2
+            node.gossip(TTL=2, peers=2) # gossip new blockchain, with time to live of 2
         except Exception as exception:
             error = exception.args[0]
             print("Exception.args: %s" % error)
@@ -198,10 +203,11 @@ def handle_gossip():
         node.update_network_state_with_message(decoded_json)
 
         # check message's TTL to see if we need to gossip
-        message_ttl = decoded_json['TTL']
-        if message_ttl > 1:
-            new_ttl = message_ttl - 1
-            node.gossip(TTL=new_ttl)
+        # message_ttl = decoded_json['TTL']
+        # print("Message received with TTL: %s" % message_ttl)
+        # if message_ttl > 1:
+        #     new_ttl = message_ttl - 1
+        #     node.gossip(TTL=new_ttl)
 
         return node.generate_update_message()
 
