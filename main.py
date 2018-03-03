@@ -3,23 +3,13 @@ from blockchain.transaction import signature, transaction
 from blockchain import blockchain
 import requests
 import json
-import sys
 import random
-import threading
 import webbrowser
-import pickle
 import jsonpickle
 
 app = Flask(__name__)
 
 host_url = "http://127.0.0.1"
-
-
-# * High-Level Notes *
-# - Nodes Gossip by sharing their latest blockchain
-# - This state is communicated in both POST /gossip/ requests & responses
-# - A node updates its current blockchain each time it receives another node's blockchain
-# (^ which can be via a request or response)
 
 
 
@@ -34,7 +24,6 @@ class Node(object):
         self.network_state = {} # {'port1': 'public_key1', 'port2': 'public_key2', etc.}
         self.blockchain = None
         self.message_cache = []
-        self.last_message = None
         self.peer_ports = self.get_peer_port()
 
         # generate node's public and private keys
@@ -69,7 +58,7 @@ class Node(object):
 
     def gossip(self, TTL=1, peers=1):
 
-        print("Gossiping, with TTL: %s" % TTL)
+        print("Gossipping...")
 
         # prepare message to post to peer
         message = self.generate_update_message(TTL)
@@ -219,6 +208,6 @@ if __name__ == "__main__":
     node = Node()
 
     # view node in web browser in new tab
-    # webbrowser.open(host_url + (":%s" % node.port), new=2)
+    webbrowser.open(host_url + (":%s" % node.port), new=2)
 
     app.run(host="127.0.0.1", port=int(node.port))
