@@ -16,7 +16,7 @@ This repo also includes the beautiful, and highly-insecure DumbCoin Wallet and B
 
 Enjoy.
 
-!(https://gfycat.com/ifr/AshamedUntimelyJaguarundi-size_restricted.gif)
+![DumbCoin Wallet](https://thumbs.gfycat.com/AshamedUntimelyJaguarundi-size_restricted.gif)
 
 
 DumbCoin was born during Bradfield's cryptocurrency course. The initial assignments are included below.
