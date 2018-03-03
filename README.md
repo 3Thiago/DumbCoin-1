@@ -1,3 +1,26 @@
+# DumbCoin
+
+Welcome to DumbCoin, the world's dumbest cryptocurrency (next to Tron).
+
+DumbCoin was built from scratch in Python as a personal project.
+
+In DumbCoin, the miner of the first block receives the entire money supply - which, as of this writing, is 21 Million DumbCoins.
+
+There is only one type of node, and they can all do two things: send/receive DumbCoin and mine blocks.
+
+Nodes mine their own block upon creating a transaction, and broadcast their new block via a gossip protocol.
+
+This repo also includes the beautiful, and highly-insecure DumbCoin Wallet and Block Explorer.
+
+Enjoy.
+
+![DumbCoin Wallet](https://thumbs.gfycat.com/VapidAgreeableDevilfish-size_restricted.gif)
+
+
+DumbCoin was spawned from Bradfield's cryptocurrency course. The initial assignments are included below.
+
+<hr>
+
 # Build a blockchain!
 
 In this assignment, you'll be building a blockchain from scratch. You'll want to build a block class, and then a blockchain class that includes all blocks.
