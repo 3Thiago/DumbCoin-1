@@ -4,6 +4,7 @@ from blockchain import blockchain
 import requests
 import json
 import random
+import threading
 import webbrowser
 import jsonpickle
 
@@ -21,7 +22,7 @@ class Node(object):
         self.port = str(input("Create new node on port: ")) # Because we'll use port as a key in JSON, convert to string
         self.public_key = ""
         self.secret_key = ""
-        self.network_state = {} # {'port1': 'public_key1', 'port2': 'public_key2', etc.}
+        self.network_state = {}
         self.blockchain = None
         self.message_cache = []
         self.peer_ports = self.get_peer_port()
@@ -36,7 +37,6 @@ class Node(object):
         else:
             self.gossip()
 
-    # this would normally be a network call, using terminal for convenience
     def get_peer_port(self):
         while True:
             user_input = input("Seed node at port (type 'GOD' if God node): ")
@@ -55,18 +55,38 @@ class Node(object):
         self.public_key = pk
         self.secret_key = sk
 
-    def gossip(self, TTL=1, peers=1):
-
-        print("Gossipping...")
-
-        # prepare message to post to peer
-        message = self.generate_update_message(TTL)
+    def gossip(self, prev_message=None, TTL=1, num_peers=1):
+        # choose peers to receive gossip message
+        exclude_peer = None
+        if prev_message:
+            exclude_peer = int(prev_message.get('originating_port'))
+        random_peers = self.select_random_peers(num_peers=num_peers, exclude_peers=[exclude_peer])
 
         # Gossip to x peers!
-        if self.peer_ports:
-            for i in range(0, peers):
-                self.post_message_to_random_peer(message)
+        if random_peers:
+            for i in range(0, len(random_peers)):
+                message = self.generate_update_message(TTL)
+                self.post_message_to_peer(message, random_peers[i])
 
+    def select_random_peers(self, num_peers=1, exclude_peers=[]):
+        result = []
+        peers = self.peer_ports
+        if exclude_peers:
+            for p in exclude_peers:
+                try:
+                    peers.remove(p)
+                except:
+                    pass
+
+        if len(peers) <= num_peers:
+            result = peers
+        else:
+            random_peers = []
+            for i in range(0, num_peers):
+                selected = random.choice(peers)
+                peers.remove(selected)
+                result.append(selected)
+        return result
 
     # Nodes communicate via their latest blockchain
     def generate_update_message(self, TTL=1):
@@ -82,17 +102,14 @@ class Node(object):
         # return message as json
         return jsonpickle.encode(message)
 
-    def post_message_to_random_peer(self, message):
-
-        # Create URL path for random peer node's gossip endpoint
-        post_to_url = host_url + (":%s" % random.choice(self.peer_ports)) + '/gossip'
-
+    def post_message_to_peer(self, message, peer):
+        post_to_url = host_url + (":%s" % peer) + '/gossip'
         try:
             # send POST request with new state
             print("Sending POST request to URL: %s" % post_to_url)
             resp = requests.post(post_to_url, json=message)
 
-            # they'll respond with message that includes blockchain
+            # they'll respond with message that includes their blockchain
             resp_json = json.dumps(resp.json())
             decoded_json = jsonpickle.decode(resp_json)
             self.save_message_to_cache(decoded_json) # save response to cache
@@ -123,7 +140,6 @@ class Node(object):
         for port in known_peers:
             if int(port) not in self.peer_ports:
                 self.add_peer(int(port))
-                print("New peer port value: %s" % self.peer_ports)
 
 
 
@@ -141,18 +157,16 @@ def render_front_page(errors="", balance=0):
 
 @app.route("/", methods = ['GET', 'POST'])
 def main():
-
     if request.method == "GET":
         return render_front_page()
 
     # new transaction from form
     if request.method == "POST":
-        print("POST request received with form data:")
         error = ""
         try:
             new_tx = create_transaction_with_form_data(request.form)
             node.blockchain.add_transactions([new_tx])
-            node.gossip(TTL=2, peers=2) # gossip new blockchain, with time to live of 2
+            node.gossip(TTL=2, num_peers=3) # gossip new blockchain, with time to live of 2
         except Exception as exception:
             error = exception.args[0]
             print("Exception.args: %s" % error)
@@ -191,11 +205,10 @@ def handle_gossip():
         node.update_network_state_with_message(decoded_json)
 
         # check message's TTL to see if we need to gossip
-        # message_ttl = decoded_json['TTL']
-        # print("Message received with TTL: %s" % message_ttl)
-        # if message_ttl > 1:
-        #     new_ttl = message_ttl - 1
-        #     node.gossip(TTL=new_ttl)
+        message_ttl = decoded_json['TTL']
+        if message_ttl > 1:
+            new_ttl = message_ttl - 1
+            threading.Timer(.5, node.gossip, [decoded_json, new_ttl]).start()
 
         return node.generate_update_message()
 
