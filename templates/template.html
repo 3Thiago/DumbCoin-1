@@ -5,29 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" media="screen">
     <link href="https://afeld.github.io/emoji-css/emoji.css" rel="stylesheet">
-    <style type="text/css">
-      .container {
-        max-width: 500px;
-        padding-top: 10px;
-      }
-    </style>
-    <script type="text/javascript">
-      window.onload = function() {
-
-        var a = document.getElementById("secret-key-fill");
-        a.onclick = function() {
-          var x = document.getElementById("secret-key-textfield");
-          x.value = "{{node.secret_key}}"
-          return false;
-        }
-    }
-</script>
   </head>
+
   <body>
     <div class="container">
+
+      <!-- Page Title/Header -->
       <h3 style="text-align: center; margin-bottom: 5px;">DumbCoin</h3>
       <h5 style="text-align: center; color: #3333338a; margin-top: 5px;">Node at Port {{node.port}}</h5>
 
+      <!-- Transaction Container -->
       <div class="send-transaction-container" style="padding: 10px; margin-top: 15px; background-color: #efefef; border-radius: 8px;">
         <p>Balance: <span style="color: #14a982; font-size: 16px;"><b>{{balance}}</b></span></p>
         <button onclick="toggleCreateTransaction()">Send Coins</button>
@@ -49,14 +36,15 @@
         </form>
       </div>
 
-
+      <!-- Public & Secret Keys -->
       <button onclick="togglePublic()" style="margin-top: 10px;">View Public Key</button><br>
       <p id="public-key" style="word-break: break-all; display: none;">{{node.public_key}}</p>
       <button onclick="toggleSecret()" class="secret-key-button">View Secret Key</button>
       <p id="secret-key" style="word-break: break-all; display: none;">{{node.secret_key}}</p>
       <br>
-
       <hr>
+
+      <!-- Block Explorer -->
       <div class="blockchain-explorer-header" style="text-align: center;">
         <i class="em em-mag_right"></i><i class="em em-chains"></i>
         <h4>DumbChain Explorer</h4>
@@ -72,9 +60,9 @@
           </div>
         {% endfor %}
       </div>
-
       <hr>
 
+      <!-- Message Cache Explorer -->
       <div class="message-cache-header" style="text-align: center;">
         <i class="em em-mega"></i><i class="em em-ear"></i>
         <h4>Message Explorer</h4>
@@ -91,8 +79,6 @@
 
     <!-- The Mining Modal -->
     <div id="myModal" class="modal">
-
-      <!-- Modal content -->
       <div class="modal-content">
         <div class="modal-header">
           <span class="close">&times;</span>
@@ -103,49 +89,60 @@
           <p style="margin-top: 10px"><i class="em em-construction_worker"></i><i class="em em-pick"></i><br>Mining New Block...</p>
         </div>
       </div>
-
     </div>
 
 
     <br>
     <br>
 
+  </body>
 
-    <script>
-      function toggleCreateTransaction() {
-          var x = document.getElementById("send-transaction-form");
-          if (x.style.display === "none") {
-              x.style.display = "block";
-          } else {
-              x.style.display = "none";
-          }
+  <script>
+    function toggleCreateTransaction() {
+        var x = document.getElementById("send-transaction-form");
+        if (x.style.display === "none") {
+            x.style.display = "block";
+        } else {
+            x.style.display = "none";
+        }
+    }
+
+    function togglePublic() {
+        var x = document.getElementById("public-key");
+        if (x.style.display === "none") {
+            x.style.display = "block";
+        } else {
+            x.style.display = "none";
+        }
       }
-      function togglePublic() {
-          var x = document.getElementById("public-key");
+
+      function toggleSecret() {
+          var x = document.getElementById("secret-key");
           if (x.style.display === "none") {
               x.style.display = "block";
           } else {
               x.style.display = "none";
           }
         }
-        function toggleSecret() {
-            var x = document.getElementById("secret-key");
-            if (x.style.display === "none") {
-                x.style.display = "block";
-            } else {
-                x.style.display = "none";
-            }
+
+      function toggleMessageCache() {
+          var x = document.getElementById("message-cache");
+          if (x.style.display === "none") {
+              x.style.display = "block";
+          } else {
+              x.style.display = "none";
           }
-          function toggleMessageCache() {
-              var x = document.getElementById("message-cache");
-              if (x.style.display === "none") {
-                  x.style.display = "block";
-              } else {
-                  x.style.display = "none";
-              }
-            }
-    </script>
-    <script>
+        }
+
+      window.onload = function() {
+        var a = document.getElementById("secret-key-fill");
+        a.onclick = function() {
+          var x = document.getElementById("secret-key-textfield");
+          x.value = "{{node.secret_key}}"
+          return false;
+          }
+      }
+
       // Get the modal
       var modal = document.getElementById('myModal');
 
@@ -171,135 +168,142 @@
               modal.style.display = "none";
           }
       }
-    </script>
-    <style>
-      .loader {
-        border: 4px solid #f3f3f3;
-        border-radius: 50%;
-        border-top: 6px solid #3498db;
-        width: 40px;
-        height: 40px;
-        -webkit-animation: spin 2s linear infinite; /* Safari */
-        animation: spin .7s linear infinite;
-      }
+  </script>
 
-      /* Safari */
-      @-webkit-keyframes spin {
-        0% { -webkit-transform: rotate(0deg); }
-        100% { -webkit-transform: rotate(360deg); }
-      }
+  <style>
+    .container {
+      max-width: 500px;
+      padding-top: 10px;
+    }
 
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    </style>
-    <style>
-      .container input[type="submit"], button{
-        background-image: linear-gradient(-180deg, #66A6FF 0%, #7FB4FF 100%);
-        box-shadow: 0 1px 2px 0 rgba(0,0,0,0.20);
-        border-radius: 6px;
-        padding: 5px 7px;
-        font-family: AvenirNext-UltraLight;
-        font-size: 14px;
-        color: #FFFFFF;
-        letter-spacing: 0;
-      }
+    .container input[type="submit"], button{
+      background-image: linear-gradient(-180deg, #66A6FF 0%, #7FB4FF 100%);
+      box-shadow: 0 1px 2px 0 rgba(0,0,0,0.20);
+      border-radius: 6px;
+      padding: 5px 7px;
+      font-family: AvenirNext-UltraLight;
+      font-size: 14px;
+      color: #FFFFFF;
+      letter-spacing: 0;
+    }
 
-      .secret-key-button{
-        background-image: linear-gradient(-180deg, #E17676 0%, #DE4C4C 100%);
-        margin-top: 10px;
-      }
+    .secret-key-button{
+      background-image: linear-gradient(-180deg, #E17676 0%, #DE4C4C 100%);
+      margin-top: 10px;
+    }
 
-      /* The Modal (background) */
-      .modal {
-          display: none; /* Hidden by default */
-          position: fixed; /* Stay in place */
-          z-index: 1; /* Sit on top */
-          left: 0;
-          top: 0;
-          width: 100%; /* Full width */
-          height: 100%; /* Full height */
-          overflow: auto; /* Enable scroll if needed */
-          background-color: rgb(0,0,0); /* Fallback color */
-          background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-          -webkit-animation-name: fadeIn; /* Fade in the background */
-          -webkit-animation-duration: 0.4s;
-          animation-name: fadeIn;
-          animation-duration: 0.4s
-      }
+    /* The Modal (background) */
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        -webkit-animation-name: fadeIn; /* Fade in the background */
+        -webkit-animation-duration: 0.4s;
+        animation-name: fadeIn;
+        animation-duration: 0.4s
+    }
 
-      /* Modal Content */
-      .modal-content {
-          position: fixed;
-          bottom: 0;
-          background-color: #fefefe;
-          width: 100%;
-          -webkit-animation-name: slideIn;
-          -webkit-animation-duration: 0.4s;
-          animation-name: slideIn;
-          animation-duration: 0.4s
-      }
+    /* Modal Content */
+    .modal-content {
+        position: fixed;
+        bottom: 0;
+        background-color: #fefefe;
+        width: 100%;
+        -webkit-animation-name: slideIn;
+        -webkit-animation-duration: 0.4s;
+        animation-name: slideIn;
+        animation-duration: 0.4s
+    }
 
-      /* The Close Button */
-      .close {
-          color: white;
-          float: right;
-          font-size: 28px;
-          font-weight: bold;
-      }
+    .modal-header {
+        padding: 6px 16px;
+        background-color: #5cb85c;
+        color: white;
+    }
 
-      .close:hover,
-      .close:focus {
-          color: #000;
-          text-decoration: none;
-          cursor: pointer;
-      }
+    .modal-header h3{
+        margin: 0px;
+    }
 
-      .modal-header {
-          padding: 6px 16px;
-          background-color: #5cb85c;
-          color: white;
-      }
+    .modal-body {
+        padding: 20px 16px;
+        text-align: center;
+    }
 
-      .modal-header h3{
-          margin: 0px;
-      }
+    .modal-footer {
+        padding: 2px 16px;
+        background-color: #5cb85c;
+        color: white;
+    }
 
-      .modal-body {
-          padding: 20px 16px;
-          text-align: center;
-      }
+    /* Close Button */
+    .close {
+        color: white;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
 
-      .modal-footer {
-          padding: 2px 16px;
-          background-color: #5cb85c;
-          color: white;
-      }
+    .close:hover,
+    .close:focus {
+        color: #000;
+        text-decoration: none;
+        cursor: pointer;
+    }
 
-      /* Add Animation */
-      @-webkit-keyframes slideIn {
-          from {bottom: -300px; opacity: 0}
-          to {bottom: 0; opacity: 1}
-      }
+    /* Add Animation To Modal */
+    @-webkit-keyframes slideIn {
+        from {bottom: -300px; opacity: 0}
+        to {bottom: 0; opacity: 1}
+    }
 
-      @keyframes slideIn {
-          from {bottom: -300px; opacity: 0}
-          to {bottom: 0; opacity: 1}
-      }
+    @keyframes slideIn {
+        from {bottom: -300px; opacity: 0}
+        to {bottom: 0; opacity: 1}
+    }
 
-      @-webkit-keyframes fadeIn {
-          from {opacity: 0}
-          to {opacity: 1}
-      }
+    @-webkit-keyframes fadeIn {
+        from {opacity: 0}
+        to {opacity: 1}
+    }
 
-      @keyframes fadeIn {
-          from {opacity: 0}
-          to {opacity: 1}
-      }
+    @keyframes fadeIn {
+        from {opacity: 0}
+        to {opacity: 1}
+    }
 
-    </style>
-    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
-    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
-  </body>
+    /* Miner Loader Attributes */
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 6px solid #3498db;
+      width: 40px;
+      height: 40px;
+      -webkit-animation: spin 2s linear infinite; /* Safari */
+      animation: spin .7s linear infinite;
+    }
+
+    /* Safari */
+    @-webkit-keyframes spin {
+      0% { -webkit-transform: rotate(0deg); }
+      100% { -webkit-transform: rotate(360deg); }
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+  </style>
+
+  <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+  <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+
 </html>

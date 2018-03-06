@@ -41,7 +41,6 @@ class Node(object):
         while True:
             user_input = input("Seed node at port (type 'GOD' if God node): ")
             if user_input == 'GOD':
-                # TODO - REMOVE HARD-CODED SEED BELOW
                 return []
                 pass
             else:
