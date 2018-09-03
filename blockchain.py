@@ -1,16 +1,16 @@
+import hashlib
+
+from proof import proof
 from transaction.transaction import Transaction
 from transaction import signature
-from proof import proof
-import hashlib
-import sys
 
 WORK_FACTOR = 5
 SEED_COIN_SUPPLY = 21000000
 
 class Blockchain(object):
 
-    # * creates blockchain from seed transactions *
     def __init__(self, transactions=None):
+        # Creates blockchain from given seed transactions
         self.blocks = []
         if transactions:
             if not type(transactions) == list:
@@ -143,14 +143,16 @@ class Block(object):
 
 # * Helper Functions *
 class HashAssist(object):
+    # TODO: Add additional Hash assist functionality
+
     @classmethod
     def hash_value(self, value):
         h = hashlib.sha256()
         h.update(value.encode('utf-8'))
         return h.hexdigest()
 
-# * returns unspent transaction balance for a public key *
 def get_balance(pub_key, blocks):
+    # Returns unspent transaction balance for a given public key
     balance = 0
     for block in blocks:
         if block.transactions.to_pk == pub_key:

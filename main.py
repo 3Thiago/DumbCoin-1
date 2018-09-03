@@ -16,19 +16,17 @@ from transaction import signature
 import blockchain
 
 
-
 app = Flask(__name__)
-
 HOST_URL = "http://127.0.0.1"
 
 
 
-# * Node Class *
+# * Classes *
 
 class Node(object):
     def __init__(self):
 
-        self.port = str(input("Create new node on port: ")) # Because we'll use port as a key in JSON, convert to string
+        self.port = str(input("Create new node on port: "))
         self.public_key = ""
         self.secret_key = ""
         self.network_state = {}
@@ -36,7 +34,6 @@ class Node(object):
         self.message_cache = []
         self.peer_ports = self.get_peer_port()
 
-        # generate node's public and private keys
         self.generate_keys()
 
         # if there are no peer ports, create God transaction & blockchain
@@ -60,18 +57,19 @@ class Node(object):
                     return [seed_port]
 
     def generate_keys(self):
+        """Generates node's public and private keys"""
         pk, sk = signature.generate_keys()
         self.public_key = pk
         self.secret_key = sk
 
     def gossip(self, prev_message=None, TTL=1, num_peers=1):
-        # choose peers to receive gossip message
+        """Chooses peers to receive gossip message"""
         exclude_peer = None
         if prev_message:
             exclude_peer = int(prev_message.get('originating_port'))
         random_peers = self.select_random_peers(num_peers=num_peers, exclude_peers=[exclude_peer])
 
-        # Gossip to x peers!
+        # gossip to x peers!
         if random_peers:
             for i in range(0, len(random_peers)):
                 message = self.generate_update_message(TTL)
@@ -97,10 +95,9 @@ class Node(object):
                 result.append(selected)
         return result
 
-    # Nodes communicate via their latest blockchain
     def generate_update_message(self, TTL=1):
+    """Generates gossip message to broadcast to other nodes"""
 
-        # Create message
         message = {}
         message['originating_port'] = self.port
         message['originating_public_key'] = self.public_key
@@ -108,7 +105,6 @@ class Node(object):
         message['TTL'] = TTL
         message['blockchain'] = self.blockchain
 
-        # return message as json
         return jsonpickle.encode(message)
 
     def post_message_to_peer(self, message, peer):
@@ -162,7 +158,7 @@ def render_front_page(errors="", balance=0):
 
 
 
-# * App Functionality *
+# * Routes *
 
 @app.route("/", methods = ['GET', 'POST'])
 def main():
