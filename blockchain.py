@@ -1,10 +1,11 @@
-from .transaction.transaction import Transaction
-from .transaction import signature
-from .proof import proof
+from transaction.transaction import Transaction
+from transaction import signature
+from proof import proof
 import hashlib
+import sys
 
-work_factor = 5 # global work factor
-seed_coin_supply = 21000000 # given to miner of Gensis node
+WORK_FACTOR = 5
+SEED_COIN_SUPPLY = 21000000
 
 class Blockchain(object):
 
@@ -67,7 +68,7 @@ class Blockchain(object):
             print("Block contains invalid transactions.")
             return
         # 2. hash transaction(s)
-        tx_hash = HashAssist.hash_value(tx.to_string_for_hashing())
+        tx_hash = HashAssist.hash_value(value=tx.to_string_for_hashing())
         # 3. validate header
         header_string = block.prev_hash + tx_hash + block.nonce
         header_hash = HashAssist.hash_value(header_string)
@@ -87,7 +88,7 @@ class Blockchain(object):
                 print(error_msg)
                 raise Exception(error_msg)
             else:
-                print(error)
+                print(error_msg)
                 return False
         # 2. validate sender balance
         balance = get_balance(tx.from_pk, self.blocks)
@@ -120,11 +121,12 @@ class Block(object):
         self.nonce = nonce
         self.transactions_hash = transactions_hash
         self.transactions = transactions
-
+    
+    @staticmethod
     def create_from_transaction(tx, prev_hash):
         tx_hash = HashAssist.hash_value(tx.to_string_for_hashing())
         print("Mining nonce....")
-        nonce = proof.mint(prev_hash + tx_hash, work_factor) # mine for nonce
+        nonce = proof.mint(prev_hash + tx_hash, WORK_FACTOR) # mine for nonce
         header_hash = HashAssist.hash_value(prev_hash + tx_hash + nonce)
         return Block(header_hash, prev_hash, nonce, tx_hash, tx)
 
@@ -141,7 +143,8 @@ class Block(object):
 
 # * Helper Functions *
 class HashAssist(object):
-    def hash_value(value):
+    @classmethod
+    def hash_value(self, value):
         h = hashlib.sha256()
         h.update(value.encode('utf-8'))
         return h.hexdigest()
@@ -190,7 +193,7 @@ def fork_choice(chainA, chainB):
 # * creates God transaction with seed coins
 def create_god_transaction(to_pk):
     god_pk, god_sk = signature.generate_keys()
-    tx = Transaction(god_pk, to_pk, seed_coin_supply)
+    tx = Transaction(god_pk, to_pk, SEED_COIN_SUPPLY)
     tx.sign(god_sk)
     return tx
 
@@ -216,7 +219,7 @@ if __name__ == "__main__":
     for i in range(4):
         # if there's no blockchain, we must mine the Genesis node
         if not new_blockchain:
-            tx = Transaction(god_pk, pk, seed_coins)
+            tx = Transaction(god_pk, pk, SEED_COIN_SUPPLY)
             tx.sign(god_sk)
             new_blockchain = Blockchain([tx])
         else:
@@ -226,11 +229,13 @@ if __name__ == "__main__":
             tx.sign(sk)
             new_blockchain.add_transactions([tx])
 
+    print("Creating second blockchain...")
+
     new_blockchain_2 = None
     for i in range(3):
         # if there's no blockchain, we must mine the Genesis node
         if not new_blockchain_2:
-            tx = Transaction(god_pk, pk, seed_coins)
+            tx = Transaction(god_pk, pk, SEED_COIN_SUPPLY)
             tx.sign(god_sk)
             new_blockchain_2 = Blockchain([tx])
         else:

@@ -1,11 +1,8 @@
-# * merkle.py *
-# Creating merkle trees from raw data
-
 import hashlib
 
 raw_data = ["We", "hold", "these", "truths", "to", "be", "self-evident", "that"]
 
-hash_concat_format = "%s||%s"
+HASH_CONCAT_FORMAT = "%s||%s"
 
 
 
@@ -21,8 +18,8 @@ class MerkleTree(object):
 
         current_level = {}
         parent_level = []
-        left_child = ""
-        right_child = ""
+        left_child = None
+        right_child = None
 
         # 1. convert raw data to nodes
         for item in data:
@@ -119,7 +116,7 @@ class MerkleNode(object):
         return h.hexdigest()
 
     def concat_hashes(self, left_string, right_string):
-        return hash_concat_format % (left_string, right_string)
+        return HASH_CONCAT_FORMAT % (left_string, right_string)
 
     def print_node(self):
         print("NODE DETAILS:")
@@ -165,10 +162,10 @@ def verify_inclusion(tree, val, proof=None):
 
     for item in proof:
         if item["side"] == "right":
-            concat = hash_concat_format % (proof_hash, item["hash"])
+            concat = HASH_CONCAT_FORMAT % (proof_hash, item["hash"])
             proof_hash = tree.hash_value(concat)
         else:
-            concat = hash_concat_format % (item["hash"], proof_hash)
+            concat = HASH_CONCAT_FORMAT % (item["hash"], proof_hash)
             proof_hash = tree.hash_value(concat)
 
     return proof_hash == tree.get_root()

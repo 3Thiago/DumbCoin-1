@@ -1,16 +1,25 @@
-from flask import Flask, request, jsonify, render_template
-from blockchain.transaction import signature, transaction
-from blockchain import blockchain
-import requests
 import json
 import random
 import threading
 import webbrowser
+
 import jsonpickle
+import requests
+
+from flask import Flask
+from flask import jsonify
+from flask import render_template
+from flask import request
+
+from transaction import transaction
+from transaction import signature
+import blockchain
+
+
 
 app = Flask(__name__)
 
-host_url = "http://127.0.0.1"
+HOST_URL = "http://127.0.0.1"
 
 
 
@@ -39,7 +48,7 @@ class Node(object):
 
     def get_peer_port(self):
         while True:
-            user_input = input("Seed node at port (type 'GOD' if God node): ")
+            user_input = input("Seed with node (type 'GOD' if God node): ")
             if user_input == 'GOD':
                 return []
                 pass
@@ -103,7 +112,7 @@ class Node(object):
         return jsonpickle.encode(message)
 
     def post_message_to_peer(self, message, peer):
-        post_to_url = host_url + (":%s" % peer) + '/gossip'
+        post_to_url = HOST_URL + (":%s" % peer) + '/gossip'
         try:
             # send POST request with new state
             print("Sending POST request to URL: %s" % post_to_url)
@@ -216,10 +225,8 @@ def handle_gossip():
 
 if __name__ == "__main__":
 
-    # * Create Node *
     node = Node()
 
-    # view node in web browser in new tab
-    webbrowser.open(host_url + (":%s" % node.port), new=2)
+    webbrowser.open(HOST_URL + (":%s" % node.port), new=2)
 
     app.run(host="127.0.0.1", port=int(node.port))
