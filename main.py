@@ -55,6 +55,7 @@ class Node(object):
 
     def generate_keys(self):
         """Generates node's public and private keys"""
+
         pk, sk = signature.generate_keys()
         self.public_key = pk
         self.secret_key = sk
@@ -106,7 +107,6 @@ class Node(object):
     def post_message_to_peer(self, message, peer):
         post_to_url = HOST_URL + (":%s" % peer) + '/gossip'
         try:
-            print("Sending POST request to URL: %s" % post_to_url)
             resp = requests.post(post_to_url, json=message)
 
             resp_json = json.dumps(resp.json())
@@ -178,8 +178,6 @@ def create_transaction_with_form_data(form):
 
     node.blockchain.validate_transaction(tx, throw_exception=True)
     return tx
-
-
 
 @app.route("/gossip", methods = ['GET', 'POST'])
 def handle_gossip():
