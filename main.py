@@ -63,10 +63,16 @@ class Node(object):
     def gossip(self, prev_message=None, TTL=1, num_peers=1):
         """Chooses peers to receive gossip message"""
 
+        print("Gossip called!")
+
         exclude_peer = None
         if prev_message:
-            exclude_peer = int(prev_message.get('originating_port'))
+            # exclude_peer = int(prev_message.get('originating_port'))
+            pass
         random_peers = self.select_random_peers(num_peers=num_peers, exclude_peers=[exclude_peer])
+
+        print("With random peers....")
+        print(random_peers)
 
         if random_peers:
             for i in range(0, len(random_peers)):

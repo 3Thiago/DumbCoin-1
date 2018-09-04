@@ -17,7 +17,7 @@ class Blockchain(object):
 
         self.blocks = []
         if transactions:
-            if not type(transactions) == list:
+            if type(transactions) is not list:
                 raise Exception("Data must be a list of transactions!")
 
             for i, tx in enumerate(transactions):
