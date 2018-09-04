@@ -46,7 +46,6 @@ class Node(object):
             user_input = input("Seed with node (type 'GOD' if God node): ")
             if user_input == 'GOD':
                 return []
-                pass
             else:
                 seed_port = int(user_input)
                 if seed_port == int(self.port):
@@ -86,7 +85,6 @@ class Node(object):
         if len(peers) <= num_peers:
             result = peers
         else:
-            # random_peers = []
             for i in range(0, num_peers):
                 selected = random.choice(peers)
                 peers.remove(selected)

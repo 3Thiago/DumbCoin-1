@@ -10,7 +10,6 @@ SEED_COIN_SUPPLY = 21000000
 
 
 
-
 class Blockchain(object):
 
     def __init__(self, transactions=None):
@@ -120,7 +119,7 @@ class Blockchain(object):
             block.print_block()
 
     def remove_data(self, data):
-        raise Exception("This is the blockchain, brah. No data shall be removed.")
+        raise Exception("This is the blockchain. No data shall be removed.")
 
 
 
@@ -155,7 +154,6 @@ class Block(object):
 
 
 
-# * Helper Functions *
 class HashAssist(object):
     # TODO: Add any additional Hash assist functionality
 
